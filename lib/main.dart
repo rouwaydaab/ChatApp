@@ -1,5 +1,3 @@
-
-
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -11,15 +9,21 @@ import 'package:flutter_application_3/shared/constants.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  if (kIsWeb) {
-    await Firebase.initializeApp(
+  try {
+    if (kIsWeb) {
+      await Firebase.initializeApp(
         options: FirebaseOptions(
-            apiKey: Constants.apiKey,
-            appId: Constants.appId,
-            messagingSenderId: Constants.messagingSenderId,
-            projectId: Constants.projectId));
-  } else {
-    await Firebase.initializeApp();
+          apiKey: Constants.apiKey,
+          appId: Constants.appId,
+          messagingSenderId: Constants.messagingSenderId,
+          projectId: Constants.projectId,
+        ),
+      );
+    } else {
+      await Firebase.initializeApp();
+    }
+  } catch (e) {
+    print('Error initializing Firebase: $e');
   }
 
   runApp(const MyApp());
@@ -55,8 +59,9 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: ThemeData(
-          primaryColor: Constants().primaryColor,
-          scaffoldBackgroundColor: Colors.white),
+        primaryColor: Constants().primaryColor,
+        scaffoldBackgroundColor: Colors.white,
+      ),
       debugShowCheckedModeBanner: false,
       home: _isSignedIn ? const HomePage() : const LoginPage(),
     );
