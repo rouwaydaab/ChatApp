@@ -1,41 +1,41 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_3/pages/auth/register_page.dart';
+import 'package:flutter_application_3/pages/auth/login_page.dart';
+import 'package:flutter_application_3/pages/home_page.dart';
 import 'package:flutter_application_3/service/auth_service.dart';
-import 'package:flutter_application_3/widgets/widgets.dart';
 
 import '../../helper/helper_function.dart';
-import '../../service/database_service.dart';
-import '../home_page.dart';
+import '../../widgets/widgets.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({Key? key}) : super(key: key);
+class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _RegisterPageState extends State<RegisterPage> {
+  bool _isLoading = false;
   final formKey = GlobalKey<FormState>();
   String email = "";
-  // String username = "";
+
+
+  // String Username = "";
   String password = "";
-  bool _isLoading = false;
-AuthService authService = AuthService();
+  String fullName = "";
 
+  AuthService authService = AuthService();
 
-@override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       // appBar: AppBar( backgroundColor: Theme.of(context).primaryColor),
 
       body: _isLoading
-          ? Center(
+          ? const Center(
               child: CircularProgressIndicator(
-                  color: Theme.of(context).primaryColor),
-            )
+                  color: Colors.white))
           : SingleChildScrollView(
               child: Padding(
                 padding:
@@ -52,19 +52,20 @@ AuthService authService = AuthService();
                         //   style: TextStyle(
                         //       fontSize: 40, fontWeight: FontWeight.bold),
                         // ),
-                        const SizedBox(height: 50),
+                        // const SizedBox(height: 10),
                         // const Text("Login now",
                         //     style: TextStyle(
                         //         fontSize: 15, fontWeight: FontWeight.w400)),
+                        // const SizedBox(height: 50),
                         Image.asset(
-                          "assets/loginlogo.png",
+                          "assets/regis.png",
 
-                          width: 580, // Set the desired width
-                          height: 160, // Set the desired height
+                          width: 400, // Set the desired width
+                          height: 100, // Set the desired height
                           // fit: BoxFit.cover, // Choose the appropriate fit
                         ),
-                        // const SizedBox(height: 100),
-                        //
+                        const SizedBox(height: 50),
+
                         TextFormField(
                           decoration: textInputDecoration.copyWith(
                               labelText: "Email",
@@ -86,6 +87,32 @@ AuthService authService = AuthService();
                                     .hasMatch(val!)
                                 ? null
                                 : "Please enter a valid email";
+                          },
+                        ),
+
+                        const SizedBox(height: 15),
+
+                        TextFormField(
+                          decoration: textInputDecoration.copyWith(
+                              labelText: "FullName",
+                              prefixIcon: Icon(
+                                Icons.email,
+                                color: Theme.of(context).primaryColor,
+                              )),
+                          style: const TextStyle(color: Colors.white),
+                          onChanged: (val) {
+                            setState(() {
+                              fullName = val;
+                            });
+                          },
+
+                          // check tha validation
+                          validator: (val) {
+                            if (val!.isNotEmpty) {
+                              return null;
+                            } else {
+                              return "Name Cannot be empty";
+                            }
                           },
                         ),
 
@@ -149,7 +176,7 @@ AuthService authService = AuthService();
                         ),
 
                         const SizedBox(
-                          height: 20,
+                          height: 10,
                         ),
                         SizedBox(
                           width: double.infinity,
@@ -160,12 +187,12 @@ AuthService authService = AuthService();
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(30))),
                             child: const Text(
-                              "Sign In",
+                              "Register",
                               style: TextStyle(
                                   color: Colors.white, fontSize: 16),
                             ),
                             onPressed: () {
-                              login();
+                              register();
                             },
                           ),
                         ),
@@ -174,38 +201,18 @@ AuthService authService = AuthService();
                           height: 10,
                         ),
                         Text.rich(TextSpan(
-                          text: "Don't have an account? ",
+                          text: "Already have an account?",
                           style: const TextStyle(
                               color: Colors.white, fontSize: 14),
                           children: <TextSpan>[
                             TextSpan(
-                                text: "Register here",
+                                text: "Login Now",
                                 style: const TextStyle(
                                     color: Colors.white,
                                     decoration: TextDecoration.underline),
                                 recognizer: TapGestureRecognizer()
-                                  ..onTap = () async{
-                                  final result = await Navigator.push(
-                                    context, MaterialPageRoute(builder: (context) => RegisterPage()),
-                                  );
-                                  // Handle the result (data passed back from RegisterPage)
-
-if (result != null){
-  //Access  the entered data
-  String fullName = result["fullName"];
-  String email = result["email"];
-  // Do something with the data
-  print("Received data from RegisterPage: $fullName, $email");
-}
-
-
-
-
-
-
-                                    // nextScreen(context, const RegisterPage());
-
-
+                                  ..onTap = () {
+                                    nextScreen(context, const LoginPage());
                                   }),
                           ],
                         )),
@@ -216,69 +223,56 @@ if (result != null){
     );
   }
 
-  login() async {
+  void register() async {
     if (formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
       });
       await authService
-          .loginWithUserNameandPassword(email, password)
+          .registerUserWithEmailandPassword(fullName, email, password)
           .then((value) async {
+            setState(() {
+              _isLoading = false;
+            });
         if (value == true) {
-          QuerySnapshot snapshot =
-          await DatabaseService(uid: FirebaseAuth.instance.currentUser!.uid)
-              .gettingUserData(email);
-          // saving the values to our shared preferences
+          //saving the shared preference state
           await HelperFunctions.saveUserLoggedInStatus(true);
           await HelperFunctions.saveUserEmailSF(email);
-          await HelperFunctions.saveUserNameSF(snapshot.docs[0]['fullName']);
+          await HelperFunctions.saveUserNameSF(fullName);
           nextScreenReplace(context, const HomePage());
-        } else {
+        }else{
           showSnackbar(context, Colors.red, value);
-          setState(() {
-            _isLoading = false;
-          });
-        }
-      });
+
+         setState(() {
+           _isLoading = false;
+         });
+
+
+
+
+
+
+
+
+          // Pass back the entered data to the previous screen
+          Navigator.pop(context, {"fullName": fullName, "email": email});
+        // } else {
+        //   setState(() {
+        //     _isLoading = false;
+        //   });
+        // }
+      }
+          }
+      );
     }
+
+    // bool containsSpecialCharacters(String value) {
+    //   // Add logic to check if the username contains special characters
+    //   // For example, you can use a regular expression
+    //   final RegExp specialCharacters = RegExp(r'[!@#%^&*(),.?":{}|<>]');
+    //   return specialCharacters.hasMatch(value);
+    // }
   }
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   bool containsSpecialCharacters(String value) {
     // Add logic to check if the username contains special characters
@@ -286,3 +280,4 @@ if (result != null){
     final RegExp specialCharacters = RegExp(r'[!@#%^&*(),.?":{}|<>]');
     return specialCharacters.hasMatch(value);
   }
+}

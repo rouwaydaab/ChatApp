@@ -4,66 +4,40 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_application_3/helper/helper_function.dart';
 import 'package:flutter_application_3/pages/auth/login_page.dart';
 import 'package:flutter_application_3/pages/home_page.dart';
-import 'package:flutter_application_3/shared/constants.dart';
+import 'package:flutter_application_3/shared/Constants.dart';
+
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
-    if (kIsWeb) {
-      await Firebase.initializeApp(
-        options: FirebaseOptions(
-          apiKey: Constants.apiKey,
-          appId: Constants.appId,
-          messagingSenderId: Constants.messagingSenderId,
-          projectId: Constants.projectId,
-        ),
-      );
-    } else {
-      await Firebase.initializeApp();
-    }
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
   } catch (e) {
     print('Error initializing Firebase: $e');
   }
 
-  runApp(const MyApp());
+  await HelperFunctions.getUserLoggedInStatus().then((value) {
+    runApp(MyApp(isSignedIn: value ?? false));
+  });
 }
 
-class MyApp extends StatefulWidget {
-  const MyApp({Key? key}) : super(key: key);
+class MyApp extends StatelessWidget {
+  final bool isSignedIn;
 
-  @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  bool _isSignedIn = false;
-
-  @override
-  void initState() {
-    super.initState();
-    getUserLoggedInStatus();
-  }
-
-  getUserLoggedInStatus() async {
-    await HelperFunctions.getUserLoggedInStatus().then((value) {
-      if (value != null) {
-        setState(() {
-          _isSignedIn = value;
-        });
-      }
-    });
-  }
+  const MyApp({Key? key, required this.isSignedIn}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: ThemeData(
         primaryColor: Constants().primaryColor,
-        scaffoldBackgroundColor: Colors.white,
+        scaffoldBackgroundColor: const Color(0xFF040116),
       ),
       debugShowCheckedModeBanner: false,
-      home: _isSignedIn ? const HomePage() : const LoginPage(),
+      home: isSignedIn ? const HomePage() : const LoginPage(),
     );
   }
 }
