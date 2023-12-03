@@ -20,7 +20,6 @@ class _RegisterPageState extends State<RegisterPage> {
   final formKey = GlobalKey<FormState>();
   String email = "";
 
-
   // String Username = "";
   String password = "";
   String fullName = "";
@@ -33,9 +32,7 @@ class _RegisterPageState extends State<RegisterPage> {
       // appBar: AppBar( backgroundColor: Theme.of(context).primaryColor),
 
       body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(
-                  color: Colors.white))
+          ? const Center(child: CircularProgressIndicator(color: Colors.white))
           : SingleChildScrollView(
               child: Padding(
                 padding:
@@ -188,8 +185,8 @@ class _RegisterPageState extends State<RegisterPage> {
                                     borderRadius: BorderRadius.circular(30))),
                             child: const Text(
                               "Register",
-                              style: TextStyle(
-                                  color: Colors.white, fontSize: 16),
+                              style:
+                                  TextStyle(color: Colors.white, fontSize: 16),
                             ),
                             onPressed: () {
                               register();
@@ -231,39 +228,31 @@ class _RegisterPageState extends State<RegisterPage> {
       await authService
           .registerUserWithEmailandPassword(fullName, email, password)
           .then((value) async {
-            setState(() {
-              _isLoading = false;
-            });
+        setState(() {
+          _isLoading = false;
+        });
         if (value == true) {
           //saving the shared preference state
           await HelperFunctions.saveUserLoggedInStatus(true);
           await HelperFunctions.saveUserEmailSF(email);
           await HelperFunctions.saveUserNameSF(fullName);
           nextScreenReplace(context, const HomePage());
-        }else{
+        } else {
           showSnackbar(context, Colors.red, value);
 
-         setState(() {
-           _isLoading = false;
-         });
-
-
-
-
-
-
-
+          setState(() {
+            _isLoading = false;
+          });
 
           // Pass back the entered data to the previous screen
           Navigator.pop(context, {"fullName": fullName, "email": email});
-        // } else {
-        //   setState(() {
-        //     _isLoading = false;
-        //   });
-        // }
-      }
-          }
-      );
+          // } else {
+          //   setState(() {
+          //     _isLoading = false;
+          //   });
+          // }
+        }
+      });
     }
 
     // bool containsSpecialCharacters(String value) {
